@@ -1,4 +1,4 @@
-       DEF  AEQ,MAKETX,PRINTL
+       DEF  AEQ,ANEQ,MAKETX,PRINTL
        REF  VMBW,VMBR
 
 PASSED DATA >0000
@@ -25,7 +25,7 @@ AEQM1  BSS  >4
 AEQM2  BSS  >4
        TEXT '.'
 AEQME  EVEN
-AEQP   LI   R12,STACK
+AEQP
 * Copy Parameters
        BL   @COPYP
 * Output Test Name
@@ -51,7 +51,7 @@ AEQS   BL   @RS
 * R2: Expected value
 * R3: Actual value
 * R4-> 1 = true, 0 = false
-ANEQ   DATA WORKSP,AEQP
+ANEQ   DATA WORKSP,ANEQP
 ANEQM  TEXT 'Expected unequal values, but '
        TEXT 'both values are '
 ANEQM1 BSS  >4
@@ -100,11 +100,15 @@ OTN    MOV  R11,*R12+
        RT
 
 * Print Test Name to Screen
+PTNSB  TEXT ' '
 PTNST  TEXT 'Running test:'
 PTNST2 EVEN
 PTNS   MOV  R11,*R12+
        MOV  R0,*R12+
        MOV  R1,*R12+
+       LI   R0,PTNSB
+       LI   R1,PTNST-PTNSB
+       BL   @SCRLP
        LI   R0,PTNST
        LI   R1,PTNST2-PTNST
        BL   @SCRLP
