@@ -1,12 +1,74 @@
-       DEF  AEQ,ANEQ,MAKETX,PRINTL
-       REF  VMBW,VMBR
+       DEF  RUNTST,AEQ,ANEQ,MAKETX,PRINTL
+       REF  VMBW,VMBR,TSTCNT,TSTDAT
+* Other object code file must define a 
+* word of memory called TSTCNT
+* and a buffer area called TSTDAT.
 
 PASSED DATA >0000
 FAILED DATA >0000
 TRUE   DATA >0001
 FALSE  DATA >0000
+* Workspace for assert routines
 WORKSP BSS  >20
+* Workspace for RUNTST routine
+RTWRKS BSS  >20
+* Workspace for client tests
+TSTWS  BSS  >20
 STACK  BSS  >100
+
+* Run Tests
+* ---------
+* Accepts a list of methods to run
+* by calling BLWP. Clears the method's
+* workspace before continuing.
+*
+* Memory Addresses after BLWP command
+* TSTCNT: number of tests to run
+* TSTDAT:
+* +00: Address of 1st test name
+* +02: Length of 1st test name
+* +04: Address of 1st test
+* +06: Address of 2nd test name
+* +08: Length of 2nd test name
+* +10: Address of 2nd test
+* +12: Address of 3rd test name
+* ...
+TESTRT DATA TSTWS
+TESTRC BSS  >2
+RUNTST 
+       LWPI RTWRKS
+* Calculate end of data address.
+* Put address in R3.
+* New address = address of TSTDAT 
+*               + 6 * value in TSTCNT
+       LI   R14,TSTDAT
+       MOV  @TSTCNT,R2
+       LI   R4,6
+       MPY  R4,R2
+       A    R14,R3
+* Output Test Name
+RTPOTN MOV  *R14+,R0
+       MOV  *R14+,R1
+       BL   @OTN
+* Clear Workspace.
+       LI   R0,TSTWS
+       LI   R1,TSTWS+>20
+RTPCLR CLR  *R0+
+       C    R0,R1
+       JL   RTPCLR
+* Call next routine
+       MOV  *R14+,@TESTRC
+       BLWP @TESTRT
+* Continue if not at end of data
+       C    R14,R3
+       JL   RTPOTN
+* TODO: Add routine to print results
+       LIMI 2
+JMP    JMP  JMP
+
+M1     DATA M1WS,M1P
+M1WS   BSS  >20
+M1P    RTWP
 
 * Assert Words Are Equal
 * ----------------------
@@ -56,7 +118,6 @@ ANEQM  TEXT 'Expected unequal values, but '
        TEXT 'both values are '
 ANEQM1 BSS  >4
        TEXT '.'
-ANEQM2 BSS  >4
 ANEQME EVEN
 ANEQP
 * Copy Parameters
@@ -67,8 +128,8 @@ ANEQP
        JNE  ANEQS
 * Report failure
        BL   @RF
-       DATA ANEQM1,ANEQM2
-       DATA ANEQM,ANEQM2-ANEQM
+       DATA ANEQM1,ANEQM1
+       DATA ANEQM,ANEQME-ANEQM
        RTWP
 * Report success
 ANEQS  BL   @RS
@@ -174,6 +235,10 @@ RF     MOV  R10,*R12+
        MOV  *R12,R0
        DECT R12
        MOV  *R12,R10
+* TODO: Don't return to the test being
+* run. No need to run extra assertions
+* in the same test. Return to RUNTST
+* somehow and continue with next test.
        RT
 
 * Make Hexadecimal Text

@@ -1,4 +1,4 @@
-       DEF  RTEST
+       DEF  TSTCNT,TSTDAT
        REF  AEQ,ANEQ,VMBW,PRINTL,MAKETX
 RESULT TEXT 'ABCD'
 BLANK  TEXT ' '
@@ -8,39 +8,54 @@ MSG2   TEXT 'This message should take up '
        TEXT 'At least, I think so.'
 MSG3   TEXT 'That is enough.'
 TEST1  TEXT 'EqTest_FirstBadResult'
-TEST2  TEXT 'EqTest_SomeResult'
-TEST3  TEXT 'EqTest_OtherResult'
+TEST2  TEXT 'EqTest_GoodResult'
+TEST3  TEXT 'EqTest_OtherBadResult'
 TEST4  TEXT 'NotEqTest_GoodResult'
 TEST5  TEXT 'NotEqTest_BadResult'
-TESTE  EVEN
+TEST0  EVEN
+WORKSP BSS  >20
+TSTCNT DATA 5
+TSTDAT DATA TEST1,TEST2-TEST1,TESTA
+       DATA TEST2,TEST3-TEST2,TESTB
+       DATA TEST3,TEST4-TEST3,TESTC
+       DATA TEST4,TEST5-TEST4,TESTD
+       DATA TEST5,TEST0-TEST5,TESTE
 
-RTEST
-       LI   R0,TEST1
+TESTA  LI   R0,TEST1
        LI   R1,TEST2-TEST1
        LI   R2,4
        LI   R3,8
        BLWP @AEQ
-       LI   R0,TEST2
+       RTWP
+
+TESTB  LI   R0,TEST2
        LI   R1,TEST3-TEST2
        LI   R2,8372
        LI   R3,8372
        BLWP @AEQ
-       LI   R0,TEST3
+       RTWP
+
+TESTC  LI   R0,TEST3
        LI   R1,TEST4-TEST3
        LI   R2,>F8A3
        LI   R3,>4210
        BLWP @AEQ
-       LI   R0,TEST4
+       RTWP
+
+TESTD  LI   R0,TEST4
        LI   R1,TEST5-TEST4
        LI   R2,>D791
        LI   R3,>57AB
        BLWP @ANEQ
-       LI   R0,TEST5
-       LI   R1,TESTE-TEST5
+       RTWP
+
+TESTE  LI   R0,TEST5
+       LI   R1,TEST0-TEST5
        LI   R2,>3F71
        LI   R3,>3F71
        BLWP @ANEQ
-
+       RTWP
+       
 *      LI   R0,BLANK
 *      LI   R1,MSG1-BLANK
 *      BLWP @PRINTL
@@ -61,6 +76,4 @@ RTEST
 *      LI   R1,RTEST-MSG3
 *      BLWP @PRINTL
 
-       LIMI 2
-JMP    JMP  JMP
        END
