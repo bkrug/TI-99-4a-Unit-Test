@@ -1,0 +1,52 @@
+       DEF  RTEST
+       REF  AEQ,VMBW,PRINTL,MAKETX
+RESULT TEXT 'ABCD'
+BLANK  TEXT ' '
+MSG1   TEXT 'We are scrolling now.'
+MSG2   TEXT 'This message should take up '
+       TEXT 'multiple lines of text. '
+       TEXT 'At least, I think so.'
+MSG3   TEXT 'That is enough.'
+TEST1  TEXT 'Action1_Result1'
+TEST2  TEXT 'OtherAction_SomeResult'
+TEST3  TEXT 'BestAction_BadResult'
+TESTE  EVEN
+
+RTEST
+       LI   R0,TEST1
+       LI   R1,TEST2-TEST1
+       LI   R2,4
+       LI   R3,8
+       BLWP @AEQ
+       LI   R0,TEST2
+       LI   R1,TEST3-TEST2
+       LI   R2,8372
+       LI   R3,8372
+       BLWP @AEQ
+       LI   R0,TEST3
+       LI   R1,TESTE-TEST2
+       LI   R2,>F8A3
+       LI   R3,>4210
+       BLWP @AEQ
+       LI   R0,BLANK
+       LI   R1,MSG1-BLANK
+       BLWP @PRINTL
+       LI   R0,>4E8B
+       LI   R1,RESULT
+       BLWP @MAKETX
+       LI   R0,>2E0
+       LI   R1,RESULT
+       LI   R2,4
+       BLWP @VMBW
+       LI   R0,MSG1
+       LI   R1,MSG2-MSG1
+       BLWP @PRINTL
+       LI   R0,MSG2
+       LI   R1,MSG3-MSG2
+       BLWP @PRINTL
+       LI   R0,MSG3
+       LI   R1,RTEST-MSG3
+       BLWP @PRINTL
+       LIMI 2
+JMP    JMP  JMP
+       END
