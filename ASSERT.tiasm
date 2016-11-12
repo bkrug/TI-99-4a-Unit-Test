@@ -1,6 +1,8 @@
        DEF  AEQ,MAKETX,PRINTL
        REF  VMBW,VMBR
 
+PASSED DATA >0000
+FAILED DATA >0000
 TRUE   DATA >0001
 FALSE  DATA >0000
 WORKSP BSS  >20
@@ -38,30 +40,66 @@ AEQP   LI   R12,STACK
 * Report success
 AEQS   BL   @RS
        RTWP
-AEQNOT
+
+* Assert Words Are Not Equal
+* --------------------------
+* Return true if contents of R2 and R3
+* are not equal. Displays their 
+* contents if equal.
+* R0: Address of test name
+* R1: Length of test name
+* R2: Expected value
+* R3: Actual value
+* R4-> 1 = true, 0 = false
+ANEQ   DATA WORKSP,AEQP
+ANEQM  TEXT 'Expected unequal values, but '
+       TEXT 'both values are '
+ANEQM1 BSS  >4
+       TEXT '.'
+ANEQM2 BSS  >4
+ANEQME EVEN
+ANEQP
+* Copy Parameters
+       BL   @COPYP
+* Output Test Name
+       BL   @OTN
+       C    R2,R3
+       JNE  ANEQS
+* Report failure
+       BL   @RF
+       DATA ANEQM1,ANEQM2
+       DATA ANEQM,ANEQM2-ANEQM
+       RTWP
+* Report success
+ANEQS  BL   @RS
        RTWP
 
-*Copy Parameters to Registers
-COPYP  MOV  *R13+,R0
+* Routines shared by assert
+* routines.
+* ----------------------
+
+* Copy Parameters to Registers
+COPYP  LI   R12,STACK
+       MOV  *R13+,R0
        MOV  *R13+,R1
        MOV  *R13+,R2
        MOV  *R13+,R3
        AI   R13,-8
        RT
 
-*Output Test Name
+* Output Test Name
 * R0: Address of test name
 * R1: length of test name
 OTN    MOV  R11,*R12+
-*Print to screen
+* Print to screen
        BL   @PTNS
-*Print to output file
+* Print to output file
 *      BL   @PTNOF
        DECT R12
        MOV  *R12,R11
        RT
 
-*Print Test Name to Screen
+* Print Test Name to Screen
 PTNST  TEXT 'Running test:'
 PTNST2 EVEN
 PTNS   MOV  R11,*R12+
@@ -79,7 +117,7 @@ PTNS   MOV  R11,*R12+
        MOV  *R12,R11
        RT
 
-*Report Success
+* Report Success
 RST    TEXT 'Success.'
 RST2   EVEN
 RS     MOV  R11,*R12+
@@ -88,6 +126,7 @@ RS     MOV  R11,*R12+
        LI   R0,RST
        LI   R1,RST2-RST
        BL   @SCRLP
+       INC  @PASSED
        MOV  @TRUE,@8(R13)
        DECT R12
        MOV  *R12,R1
@@ -97,7 +136,7 @@ RS     MOV  R11,*R12+
        MOV  *R12,R11
        RT
 
-*Report Failure
+* Report Failure
 * R2: Expected Value
 * R3: Actual Value
 * Memory Addresses after BL command
@@ -121,6 +160,7 @@ RF     MOV  R10,*R12+
        MOV  *R10+,R0
        MOV  *R10+,R1
        BL   @SCRLP
+       INC  @FAILED
        MOV  @FALSE,@8(R13)
        MOV  R10,R11
 
@@ -132,7 +172,8 @@ RF     MOV  R10,*R12+
        MOV  *R12,R10
        RT
 
-*Make Hexadecimal Text
+* Make Hexadecimal Text
+* ----------------------
 * R0: Word to convert.
 * R1: Address output text (4 bytes)
 MAKETX DATA WORKSP,MAKEP
@@ -142,15 +183,11 @@ MAKEP  LI   R12,STACK
        BL   @MAKEHX
        RTWP
 MAKEHX MOV  R11,*R12+
-       MOV  R2,*R12+
-       MOVB R0,R2
        BL   @MAKEP1
-       SLA  R0,8
-       MOVB R0,R2
+       SWPB R0
        BL   @MAKEP1
+       SWPB R0
 * return
-       DECT R12
-       MOV  *R12,R2
        DECT R12
        MOV  *R12,R11
        RT
@@ -158,13 +195,13 @@ MAKEHX MOV  R11,*R12+
 MAKEP1 MOV  R11,*R12+
        MOV  R4,*R12+
 *High Byte
-       MOVB R2,R4
+       MOVB R0,R4
        SRL  R4,4
        BL   @CONVB
        MOVB R4,*R1
        INC  R1
 *Low Byte
-       MOVB R2,R4
+       MOVB R0,R4
        SLA  R4,4
        SRL  R4,4
        BL   @CONVB
@@ -184,11 +221,12 @@ CONVB  CI   R4,>0A00
 CNVB2  AI   R4,>3700
        RT
 
-*Scroll screen upward and place text at
-*the bottom of the screen. Can be
-*multiple lines.
-*R0: Address of text.
-*R1: Length of text.
+* Scroll screen upward and place text
+* at the bottom of the screen. Can be
+* multiple lines.
+* ----------------------
+* R0: Address of text.
+* R1: Length of text.
 PRINTL DATA WORKSP,PRINTP
 LINLNG DATA 32
 SCRN   BSS  >300
