@@ -75,8 +75,8 @@ M1P    RTWP
 * Return true if contents of R2 and R3
 * are equal. Displays their contents if
 * not equal.
-* R0: Address of test name
-* R1: Length of test name
+* R0: Address of fail message
+* R1: Length of fail message
 * R2: Expected value
 * R3: Actual value
 * R4-> 1 = true, 0 = false
@@ -91,13 +91,13 @@ AEQP
 * Copy Parameters
        BL   @COPYP
 * Output Test Name
-       BL   @OTN
        C    R2,R3
        JEQ  AEQS
 * Report failure
        BL   @RF
        DATA AEQM1,AEQM2
        DATA AEQMES,AEQME-AEQMES
+       BL   @SCRLP
        RTWP
 * Report success
 AEQS   BL   @RS
@@ -108,8 +108,8 @@ AEQS   BL   @RS
 * Return true if contents of R2 and R3
 * are not equal. Displays their 
 * contents if equal.
-* R0: Address of test name
-* R1: Length of test name
+* R0: Address of fail message
+* R1: Length of fail message
 * R2: Expected value
 * R3: Actual value
 * R4-> 1 = true, 0 = false
@@ -123,13 +123,13 @@ ANEQP
 * Copy Parameters
        BL   @COPYP
 * Output Test Name
-       BL   @OTN
        C    R2,R3
        JNE  ANEQS
 * Report failure
        BL   @RF
        DATA ANEQM1,ANEQM1
        DATA ANEQM,ANEQME-ANEQM
+       BL   @SCRLP
        RTWP
 * Report success
 ANEQS  BL   @RS

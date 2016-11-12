@@ -1,79 +1,60 @@
        DEF  TSTCNT,TSTDAT
        REF  AEQ,ANEQ,VMBW,PRINTL,MAKETX
-RESULT TEXT 'ABCD'
-BLANK  TEXT ' '
-MSG1   TEXT 'We are scrolling now.'
-MSG2   TEXT 'This message should take up '
-       TEXT 'multiple lines of text. '
-       TEXT 'At least, I think so.'
-MSG3   TEXT 'That is enough.'
-TEST1  TEXT 'EqTest_FirstBadResult'
-TEST2  TEXT 'EqTest_GoodResult'
-TEST3  TEXT 'EqTest_OtherBadResult'
-TEST4  TEXT 'NotEqTest_GoodResult'
-TEST5  TEXT 'NotEqTest_BadResult'
-TEST0  EVEN
-WORKSP BSS  >20
-TSTCNT DATA 5
-TSTDAT DATA TEST1,TEST2-TEST1,TESTA
-       DATA TEST2,TEST3-TEST2,TESTB
-       DATA TEST3,TEST4-TEST3,TESTC
-       DATA TEST4,TEST5-TEST4,TESTD
-       DATA TEST5,TEST0-TEST5,TESTE
 
-TESTA  LI   R0,TEST1
-       LI   R1,TEST2-TEST1
+NAME1  TEXT 'EqTest_FirstBadResult'
+NAME2  TEXT 'EqTest_GoodResult'
+NAME3  TEXT 'EqTest_OtherBadResult'
+NAME4  TEXT 'NotEqTest_GoodResult'
+NAME5  TEXT 'NotEqTest_BadResult'
+NAME0  EVEN
+
+MSG1   TEXT 'This failure message should be visible.'
+MSG2   TEXT 'This failure message should not appear.'
+MSG3   TEXT 'This failure message should be visible.'
+MSG4   TEXT 'This failure message should not appear.'
+MSG5   TEXT 'This failure message should be visible.'
+MSG0   EVEN
+
+TSTCNT DATA 5
+TSTDAT DATA NAME1,NAME2-NAME1,TEST1
+       DATA NAME2,NAME3-NAME2,TEST2
+       DATA NAME3,NAME4-NAME3,TEST3
+       DATA NAME4,NAME5-NAME4,TEST4
+       DATA NAME5,NAME0-NAME5,TEST5
+
+TEST1  LI   R0,MSG1
+       LI   R1,MSG2-MSG1
        LI   R2,4
        LI   R3,8
        BLWP @AEQ
        RTWP
 
-TESTB  LI   R0,TEST2
-       LI   R1,TEST3-TEST2
+TEST2  LI   R0,MSG2
+       LI   R1,MSG3-MSG2
        LI   R2,8372
        LI   R3,8372
        BLWP @AEQ
        RTWP
 
-TESTC  LI   R0,TEST3
-       LI   R1,TEST4-TEST3
+TEST3  LI   R0,MSG3
+       LI   R1,MSG4-MSG3
        LI   R2,>F8A3
        LI   R3,>4210
        BLWP @AEQ
        RTWP
 
-TESTD  LI   R0,TEST4
-       LI   R1,TEST5-TEST4
+TEST4  LI   R0,MSG4
+       LI   R1,MSG5-MSG4
        LI   R2,>D791
        LI   R3,>57AB
        BLWP @ANEQ
        RTWP
 
-TESTE  LI   R0,TEST5
-       LI   R1,TEST0-TEST5
+TEST5  LI   R0,MSG5
+       LI   R1,MSG0-MSG5
        LI   R2,>3F71
        LI   R3,>3F71
        BLWP @ANEQ
        RTWP
        
-*      LI   R0,BLANK
-*      LI   R1,MSG1-BLANK
-*      BLWP @PRINTL
-*      LI   R0,>4E8B
-*      LI   R1,RESULT
-*      BLWP @MAKETX
-*      LI   R0,>2E0
-*      LI   R1,RESULT
-*      LI   R2,4
-*      BLWP @VMBW
-*      LI   R0,MSG1
-*      LI   R1,MSG2-MSG1
-*      BLWP @PRINTL
-*      LI   R0,MSG2
-*      LI   R1,MSG3-MSG2
-*      BLWP @PRINTL
-*      LI   R0,MSG3
-*      LI   R1,RTEST-MSG3
-*      BLWP @PRINTL
-
        END
