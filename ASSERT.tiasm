@@ -75,10 +75,10 @@ M1P    RTWP
 * Return true if contents of R2 and R3
 * are equal. Displays their contents if
 * not equal.
-* R0: Address of fail message
-* R1: Length of fail message
-* R2: Expected value
-* R3: Actual value
+* R0: Expected value
+* R1: Actual value
+* R2: Address of fail message
+* R3: Length of fail message
 * R4-> 1 = true, 0 = false
 AEQ    DATA WORKSP,AEQP
 AEQMES TEXT 'Expected '
@@ -91,13 +91,12 @@ AEQP
 * Copy Parameters
        BL   @COPYP
 * Output Test Name
-       C    R2,R3
+       C    R0,R1
        JEQ  AEQS
 * Report failure
        BL   @RF
        DATA AEQM1,AEQM2
        DATA AEQMES,AEQME-AEQMES
-       BL   @SCRLP
        RTWP
 * Report success
 AEQS   BL   @RS
@@ -108,10 +107,10 @@ AEQS   BL   @RS
 * Return true if contents of R2 and R3
 * are not equal. Displays their 
 * contents if equal.
-* R0: Address of fail message
-* R1: Length of fail message
-* R2: Expected value
-* R3: Actual value
+* R0: Expected value
+* R1: Actual value
+* R2: Address of fail message
+* R3: Length of fail message
 * R4-> 1 = true, 0 = false
 ANEQ   DATA WORKSP,ANEQP
 ANEQM  TEXT 'Expected unequal values, but '
@@ -123,13 +122,12 @@ ANEQP
 * Copy Parameters
        BL   @COPYP
 * Output Test Name
-       C    R2,R3
+       C    R0,R1
        JNE  ANEQS
 * Report failure
        BL   @RF
        DATA ANEQM1,ANEQM1
        DATA ANEQM,ANEQME-ANEQM
-       BL   @SCRLP
        RTWP
 * Report success
 ANEQS  BL   @RS
@@ -202,33 +200,45 @@ RS     MOV  R11,*R12+
        RT
 
 * Report Failure
-* R2: Expected Value
-* R3: Actual Value
+* R0: Expected Value
+* R1: Actual Value
+* R2: User-defined failure message
+* R3: Message length
 * Memory Addresses after BL command
 * +02: Dest address of expected text
 * +04: Dest address of actual text
-* +06: Address of failure message
+* +06: Address of standard failure message
 * +08: length of failure message
 RF     MOV  R10,*R12+
        MOV  R0,*R12+
        MOV  R1,*R12+
+       MOV  R4,*R12+
 
        MOV  R11,R10
+       MOV  R1,R4
 * Convert values to Hexadecimal Text.
-       MOV  R2,R0
+* R0 already contains the expected value
        MOV  *R10+,R1
        BL   @MAKEHX
-       MOV  R3,R0
+* the actual value is copied from R4
+       MOV  R4,R0
        MOV  *R10+,R1
        BL   @MAKEHX
-* Display message
+* Display standard failure message
        MOV  *R10+,R0
        MOV  *R10+,R1
        BL   @SCRLP
+* Display user-defined failure message
+       MOV  R2,R0
+       MOV  R3,R1
+       BL   @SCRLP
+*
        INC  @FAILED
        MOV  @FALSE,@8(R13)
        MOV  R10,R11
 
+       DECT R12
+       MOV  *R12,R4
        DECT R12
        MOV  *R12,R1
        DECT R12

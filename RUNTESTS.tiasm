@@ -22,38 +22,38 @@ TSTDAT DATA NAME1,NAME2-NAME1,TEST1
        DATA NAME4,NAME5-NAME4,TEST4
        DATA NAME5,NAME0-NAME5,TEST5
 
-TEST1  LI   R0,MSG1
-       LI   R1,MSG2-MSG1
-       LI   R2,4
-       LI   R3,8
+TEST1  LI   R0,4
+       LI   R1,8
+       LI   R2,MSG1
+       LI   R3,MSG2-MSG1
        BLWP @AEQ
        RTWP
 
-TEST2  LI   R0,MSG2
-       LI   R1,MSG3-MSG2
-       LI   R2,8372
-       LI   R3,8372
+TEST2  LI   R0,8372
+       LI   R1,8372
+       LI   R2,MSG2
+       LI   R3,MSG3-MSG2
        BLWP @AEQ
        RTWP
 
-TEST3  LI   R0,MSG3
-       LI   R1,MSG4-MSG3
-       LI   R2,>F8A3
-       LI   R3,>4210
+TEST3  LI   R0,>F8A3
+       LI   R1,>4210
+       LI   R2,MSG3
+       LI   R3,MSG4-MSG3
        BLWP @AEQ
        RTWP
 
-TEST4  LI   R0,MSG4
-       LI   R1,MSG5-MSG4
-       LI   R2,>D791
-       LI   R3,>57AB
+TEST4  LI   R0,>D791
+       LI   R1,>57AB
+       LI   R2,MSG4
+       LI   R3,MSG5-MSG4
        BLWP @ANEQ
        RTWP
 
-TEST5  LI   R0,MSG5
-       LI   R1,MSG0-MSG5
-       LI   R2,>3F71
-       LI   R3,>3F71
+TEST5  LI   R0,>3F71
+       LI   R1,>3F71
+       LI   R2,MSG5
+       LI   R3,MSG0-MSG5
        BLWP @ANEQ
        RTWP
        
