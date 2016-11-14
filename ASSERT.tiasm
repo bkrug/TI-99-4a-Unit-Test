@@ -6,6 +6,9 @@
 
 PASSED DATA >0000
 FAILED DATA >0000
+* SUSPECT: Removing the next line causes
+* the program to crash. So does reducing
+* the number of bytes reserved.
        BSS  >4
 * Workspace for assert routines
 WORKSP BSS  >20
@@ -91,10 +94,8 @@ AEQP
        BL   @RF
        DATA AEQM1,AEQM2
        DATA AEQMES,AEQME-AEQMES
-       RTWP
 * Report success
 AEQS   BL   @RS
-       RTWP
 
 * Assert Words Are Not Equal
 * --------------------------
@@ -121,10 +122,8 @@ ANEQP
        BL   @RF
        DATA ANEQM1,ANEQM1
        DATA ANEQM,ANEQME-ANEQM
-       RTWP
 * Report success
 ANEQS  BL   @RS
-       RTWP
 
 * Routines shared by assert
 * routines.
