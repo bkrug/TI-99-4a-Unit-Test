@@ -11,6 +11,13 @@ NAME0  EVEN
 MSG1   TEXT 'This failure message should be visible.'
 MSG2   TEXT 'This failure message should not appear.'
 MSG3   TEXT 'This failure message should be visible.'
+MSG3A  TEXT 'Even though this assert should fail, you '
+       TEXT 'shouldn'
+       BYTE >27
+       TEXT 't see this message. The assertion should'
+       BYTE >27
+       TEXT 't be run because if follows a different '
+       TEXT 'failed assert.'
 MSG4   TEXT 'This failure message should not appear.'
 MSG5   TEXT 'This failure message should be visible.'
 MSG0   EVEN
@@ -39,7 +46,12 @@ TEST2  LI   R0,8372
 TEST3  LI   R0,>F8A3
        LI   R1,>4210
        LI   R2,MSG3
-       LI   R3,MSG4-MSG3
+       LI   R3,MSG3A-MSG3
+       BLWP @AEQ
+       LI   R0,>4729
+       LI   R1,>C8C1
+       LI   R2,MSG3A
+       LI   R3,MSG4-MSG3A
        BLWP @AEQ
        RTWP
 

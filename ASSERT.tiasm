@@ -61,12 +61,16 @@ RTPCLR CLR  *R0+
 * Call next routine
        MOV  *R14+,@TESTRC
        BLWP @TESTRT
+* If we got here the test passed.
+       INC  @PASSED
 * Continue if not at end of data
-       C    R14,R3
+RTPCTN C    R14,R3
        JL   RTPOTN
 * TODO: Add routine to print results
        LIMI 2
 JMP    JMP  JMP
+RTFAIL INC  @FAILED
+       JMP  RTPCTN
 
 * Assert Words Are Equal
 * ----------------------
@@ -178,7 +182,6 @@ RST2   EVEN
 RS     LI   R0,RST
        LI   R1,RST2-RST
        BL   @SCRLP
-       INC  @PASSED
        RTWP
 
 * Report Failure
@@ -210,12 +213,11 @@ RF
        MOV  R2,R0
        MOV  R3,R1
        BL   @SCRLP
-*
-       INC  @FAILED
-* TODO: Don't return to the test being
-* run. No need to run extra assertions
-* in the same test. Return to RUNTST
-* somehow and continue with next test.
+* Don't return to the test being run. No
+* need to run extra assertions
+* in the same test.
+       LWPI RTWRKS
+       B    @RTFAIL
        RTWP
 
 * Make Hexadecimal Text
