@@ -1,110 +1,10 @@
-       DEF  RTEST,AEQ,ANEQ,MAKETX,PRINTL
-       REF  VMBW,VMBR,TSTCNT,TSTDAT
-* Other object code file must define a 
-* word of memory called TSTCNT
-* and a buffer area called TSTDAT.
-
-PASSED DATA >0000
-FAILED DATA >0000
-* SUSPECT: Removing the next line causes
-* the program to crash. So does reducing
-* the number of bytes reserved.
-       BSS  >4
-* Workspace for assert routines
-WORKSP BSS  >20
-* Workspace for RUNTST routine
-RTWRKS BSS  >20
-* Workspace for client tests
-TSTWS  BSS  >20
-STACK  BSS  >100
-
-* Run Tests
-* ---------
-* Accepts a list of methods to run
-* by calling BLWP. Clears the method's
-* workspace before continuing.
-*
-* Memory Addresses after BLWP command
-* TSTCNT: number of tests to run
-* TSTDAT:
-* +00: Address of 1st test name
-* +02: Length of 1st test name
-* +04: Address of 1st test
-* +06: Address of 2nd test name
-* +08: Length of 2nd test name
-* +10: Address of 2nd test
-* +12: Address of 3rd test name
-* ...
-TESTRT DATA TSTWS
-TESTRC BSS  >2
-RSLTMG BSS  >4
-       TEXT 'hex tests passed.           '
-RSLTFL BSS  >4
-       TEXT 'hex tests failed.'
-RSLTED EVEN
-RTEST 
-       LWPI RTWRKS
-* Calculate end of data address.
-* Put address in R3.
-* New address = address of TSTDAT 
-*               + 6 * value in TSTCNT
-       LI   R14,TSTDAT
-       MOV  @TSTCNT,R2
-       LI   R4,6
-       MPY  R4,R2
-       A    R14,R3
-* Output Test Name
-RTPOTN MOV  *R14+,R0
-       MOV  *R14+,R1
-       BL   @OTN
-* Clear Workspace.
-       LI   R0,TSTWS
-       LI   R1,TSTWS+>20
-RTPCLR CLR  *R0+
-       C    R0,R1
-       JL   RTPCLR
-* Call next routine
-       MOV  *R14+,@TESTRC
-       BLWP @TESTRT
-* If we got here the test passed.
-       INC  @PASSED
-* Continue if not at end of data
-RTPCTN C    R14,R3
-       JL   RTPOTN
-* Display test results.
-*    Print blank line
-       LI   R0,PTNSB
-       LI   R1,PTNST-PTNSB
-       BL   @SCRLP
-*    Convert totals
-       MOV  @PASSED,R0
-       LI   R1,RSLTMG
-       BL   @MAKEHX       
-       MOV  @FAILED,R0
-       LI   R1,RSLTFL
-       BL   @MAKEHX
-*    Print Totals
-       LI   R0,RSLTMG
-       LI   R1,RSLTED-RSLTMG
-       BL   @SCRLP
-* Enter infinite loop
-       LIMI 2
-JMP    JMP  JMP
-* This is where the RF routine will come
-* if it needs to take control away from
-* a failed test.
-RTFAIL INC  @FAILED
-       JMP  RTPCTN
-
 * Assert Words Are Equal
 * ----------------------
 * Return true if contents of R2 and R3
 * are equal. Displays their contents if
 * not equal.
-* R0: Expected value
-* R1: Actual value
-* R2: Address of fail message
-* R3: Length of fail message
+* See DSKx.TESTFRAME for paramter 
+* signature.
 AEQ    DATA WORKSP,AEQP
 AEQMES TEXT 'Expected '
 AEQM1  BSS  >4
@@ -130,10 +30,6 @@ AEQS   BL   @RS
 * Return true if contents of R2 and R3
 * are not equal. Displays their 
 * contents if equal.
-* R0: Expected value
-* R1: Actual value
-* R2: Address of fail message
-* R3: Length of fail message
 ANEQ   DATA WORKSP,ANEQP
 ANEQM  TEXT 'Expected unequal values, but '
        TEXT 'both values are '
@@ -153,212 +49,51 @@ ANEQP
 * Report success
 ANEQS  BL   @RS
 
-* Routines shared by assert
-* routines.
+* Assert Word Logical High
+* -------------------------
+* Assert that the actual result is
+* unsigned greater than the expected 
+* value.
+ALH
+
+* Assert Word Logical High Or Equal
+* ----------------------------------
+* Assert that the actual result is
+* unsigned greater than or equal to the
+* expected value.
+ALHE
+
+ALL
+ALLE
+
+AGT
+AGTE
+
+* Assert Word Less Than
 * ----------------------
+* Assert that the actual result is 
+* signed less than or equal to the
+* expected value.
+ALT
+ALTE
 
-* Copy Parameters to Registers
-COPYP  LI   R12,STACK
-       MOV  *R13+,R0
-       MOV  *R13+,R1
-       MOV  *R13+,R2
-       MOV  *R13+,R3
-       AI   R13,-8
-       RT
+ABEQ
+ABNEQ
+ABLH
+ABLHE
+ABLL
+ABLLE
+ABGT
+ABGTE
+ABLT
+ABLTE
 
-* Output Test Name
-* R0: Address of test name
-* R1: length of test name
-OTN    MOV  R11,*R12+
-* Print to screen
-       BL   @PTNS
-* Print to output file
-*      BL   @PTNOF
-       DECT R12
-       MOV  *R12,R11
-       RT
-
-* Print Test Name to Screen
-PTNSB  TEXT ' '
-PTNST  TEXT 'Running test:'
-PTNST2 EVEN
-PTNS   MOV  R11,*R12+
-       MOV  R0,*R12+
-       MOV  R1,*R12+
-       LI   R0,PTNSB
-       LI   R1,PTNST-PTNSB
-       BL   @SCRLP
-       LI   R0,PTNST
-       LI   R1,PTNST2-PTNST
-       BL   @SCRLP
-       DECT R12
-       MOV  *R12,R1
-       DECT R12
-       MOV  *R12,R0
-       BL   @SCRLP
-       DECT R12
-       MOV  *R12,R11
-       RT
-
-* Report Success
-RST    TEXT 'Success.'
-RST2   EVEN
-RS     LI   R0,RST
-       LI   R1,RST2-RST
-       BL   @SCRLP
-       RTWP
-
-* Report Failure
-* R0: Expected Value
-* R1: Actual Value
-* R2: User-defined failure message
-* R3: Message length
-* Memory Addresses after BL command
-* +02: Dest address of expected text
-* +04: Dest address of actual text
-* +06: Address of standard failure message
-* +08: length of failure message
-RF     
-       MOV  R11,R10
-       MOV  R1,R4
-* Convert values to Hexadecimal Text.
-* R0 already contains the expected value
-       MOV  *R10+,R1
-       BL   @MAKEHX
-* the actual value is copied from R4
-       MOV  R4,R0
-       MOV  *R10+,R1
-       BL   @MAKEHX
-* Display standard failure message
-       MOV  *R10+,R0
-       MOV  *R10+,R1
-       BL   @SCRLP
-* Display user-defined failure message
-       MOV  R2,R0
-       MOV  R3,R1
-       BL   @SCRLP
-* Don't return to the test being run. No
-* need to run extra assertions
-* in the same test.
-       LWPI RTWRKS
-       B    @RTFAIL
-       RTWP
-
-* Make Hexadecimal Text
-* ----------------------
-* R0: Word to convert.
-* R1: Address output text (4 bytes)
-MAKETX DATA WORKSP,MAKEP
-MAKEP  LI   R12,STACK
-       MOV  @2(R13),R1
-       MOV  @0(R13),R0
-       BL   @MAKEHX
-       RTWP
-MAKEHX MOV  R11,*R12+
-       BL   @MAKEP1
-       SWPB R0
-       BL   @MAKEP1
-       SWPB R0
-* return
-       DECT R12
-       MOV  *R12,R11
-       RT
-
-MAKEP1 MOV  R11,*R12+
-       MOV  R4,*R12+
-*High Byte
-       MOVB R0,R4
-       SRL  R4,4
-       BL   @CONVB
-       MOVB R4,*R1
-       INC  R1
-*Low Byte
-       MOVB R0,R4
-       SLA  R4,4
-       SRL  R4,4
-       BL   @CONVB
-       MOVB R4,*R1
-       INC  R1
-*Return
-       DECT R12
-       MOV  *R12,R4
-       DECT R12
-       MOV  *R12,R11
-       RT
-*Convert Byte to ASCII code
-CONVB  CI   R4,>0A00
-       JH   CNVB2
-       AI   R4,>3000
-       RT
-CNVB2  AI   R4,>3700
-       RT
-
-* Scroll screen upward and place text
-* at the bottom of the screen. Can be
-* multiple lines.
-* ----------------------
-* R0: Address of text.
-* R1: Length of text.
-PRINTL DATA WORKSP,PRINTP
-LINLNG DATA 32
-SCRN   BSS  >300
-CLRTXT TEXT '                                '
-PRINTP LI   R12,STACK
-       MOV  @0(R13),R0
-       MOV  @2(R13),R1
-       BL   @SCRLP
-       RTWP
-SCRLP  MOV  R11,*R12+
-       MOV  R8,*R12+
-       MOV  R9,*R12+
-       MOV  R2,*R12+
-       MOV  R3,*R12+
-
-       MOV  R0,R8
-       MOV  R1,R9
-*Find ceiling of text length / 32.
-       CLR  R0
-       MOV  R9,R1
-       DIV  @LINLNG,R0
-       MOV  R1,R1
-       JEQ  SCROLL
-       INC  R0
-*R0 contains number of lines to print.
-*If R0 = 0, then return to caller.
-SCROLL MOV  R0,R0
-       JNE  SCROL1
-       B    @SCRLRT
-*Scroll text by number of lines in R0.
-SCROL1 SLA  R0,5
-       LI   R1,SCRN
-       LI   R2,>300
-       S    R0,R2
-       BLWP @VMBR
-       CLR  R0
-       BLWP @VMBW
-*Clear the last line of text.
-       MOV  R2,R3
-       LI   R0,>2E0
-       LI   R1,CLRTXT
-       LI   R2,>20
-       BLWP @VMBW
-*Write new text.
-*R3 contains length of text scrolled up.
-*   Identical to text start position.
-       MOV  R3,R0
-       MOV  R8,R1
-       MOV  R9,R2
-       BLWP @VMBW
-* return
-SCRLRT DECT R12
-       MOV  *R12,R3
-       DECT R12
-       MOV  *R12,R2
-       DECT R12
-       MOV  *R12,R9
-       DECT R12
-       MOV  *R12,R8
-       DECT R12
-       MOV  *R12,R11
-       RT
-       END
+* Assert Buffers Equal
+ABFEQ
+* Assert Buffers Not Equal
+ABFNEQ
+* Assert Buffer Starts With
+ABFSW
+* Assert Buffer Ends With
+ABFEW
+ABFC
