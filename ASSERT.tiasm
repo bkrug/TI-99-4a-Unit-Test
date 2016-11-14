@@ -37,6 +37,11 @@ STACK  BSS  >100
 * ...
 TESTRT DATA TSTWS
 TESTRC BSS  >2
+RSLTMG BSS  >4
+       TEXT 'hex tests passed.           '
+RSLTFL BSS  >4
+       TEXT 'hex tests failed.'
+RSLTED EVEN
 RTEST 
        LWPI RTWRKS
 * Calculate end of data address.
@@ -66,9 +71,28 @@ RTPCLR CLR  *R0+
 * Continue if not at end of data
 RTPCTN C    R14,R3
        JL   RTPOTN
-* TODO: Add routine to print results
+* Display test results.
+*    Print blank line
+       LI   R0,PTNSB
+       LI   R1,PTNST-PTNSB
+       BL   @SCRLP
+*    Convert totals
+       MOV  @PASSED,R0
+       LI   R1,RSLTMG
+       BL   @MAKEHX       
+       MOV  @FAILED,R0
+       LI   R1,RSLTFL
+       BL   @MAKEHX
+*    Print Totals
+       LI   R0,RSLTMG
+       LI   R1,RSLTED-RSLTMG
+       BL   @SCRLP
+* Enter infinite loop
        LIMI 2
 JMP    JMP  JMP
+* This is where the RF routine will come
+* if it needs to take control away from
+* a failed test.
 RTFAIL INC  @FAILED
        JMP  RTPCTN
 

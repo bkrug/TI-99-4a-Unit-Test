@@ -3,10 +3,11 @@
 
 NAME1  TEXT 'EqTest_FirstBadResult'
 NAME2  TEXT 'EqTest_GoodResult'
-NAME3  TEXT 'EqTest_OtherBadResult'
+NAME3  TEXT 'EqTest_TwoAsserts_FirstFails'
 NAME4  TEXT 'NotEqTest_GoodResult'
 NAME5  TEXT 'NotEqTest_BadResult'
-NAME0  EVEN
+NAME6  TEXT 'NotEqTest_TwoSuccessfulAsserts'
+NAME0
 
 MSG1   TEXT 'This failure message should be visible.'
 MSG2   TEXT 'This failure message should not appear.'
@@ -20,14 +21,19 @@ MSG3A  TEXT 'Even though this assert should fail, you '
        TEXT 'failed assert.'
 MSG4   TEXT 'This failure message should not appear.'
 MSG5   TEXT 'This failure message should be visible.'
+MSG6   TEXT 'You won'
+       BYTE >27
+       TEXT 't see this.  The assert will pass.'
+MSG6A  TEXT 'Same for this message.'
 MSG0   EVEN
 
-TSTCNT DATA 5
+TSTCNT DATA 6
 TSTDAT DATA NAME1,NAME2-NAME1,TEST1
        DATA NAME2,NAME3-NAME2,TEST2
        DATA NAME3,NAME4-NAME3,TEST3
        DATA NAME4,NAME5-NAME4,TEST4
-       DATA NAME5,NAME0-NAME5,TEST5
+       DATA NAME5,NAME6-NAME5,TEST5
+       DATA NAME6,NAME0-NAME6,TEST6
 
 TEST1  LI   R0,4
        LI   R1,8
@@ -65,8 +71,20 @@ TEST4  LI   R0,>D791
 TEST5  LI   R0,>3F71
        LI   R1,>3F71
        LI   R2,MSG5
-       LI   R3,MSG0-MSG5
+       LI   R3,MSG6-MSG5
        BLWP @ANEQ
        RTWP
        
+TEST6  LI   R0,>FFFE
+       LI   R1,>0002
+       LI   R2,MSG6
+       LI   R3,MSG6A-MSG6
+       BLWP @ANEQ
+       LI   R0,>FFFD
+       LI   R1,>0003
+       LI   R2,MSG6A
+       LI   R3,MSG0-MSG6A
+       BLWP @ANEQ
+       RTWP
+
        END
