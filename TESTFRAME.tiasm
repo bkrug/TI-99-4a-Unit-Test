@@ -5,7 +5,8 @@
        DEF  ABGT,ABGTE,ABLT,ABLTE
        DEF  ABFEQ,ABFNEQ,ABFSW,ABFEW,ABFC
        
-       REF  VMBW,VMBR,TSTCNT,TSTDAT
+       REF  VMBW,VMBR,VSBW,DSRLNK
+       REF  TSTCNT,TSTDAT
 
 * Object code file containing tests must
 * define a word of memory called TSTCNT.
@@ -54,6 +55,8 @@ RSLTFL BSS  >4
 RSLTED EVEN
 RTEST 
        LWPI RTWRKS
+* Open output file.
+       BL   @OPENF
 * Calculate end of data address.
 * Put address in R3.
 * New address = address of TSTDAT 
@@ -85,7 +88,7 @@ RTPCTN C    R14,R3
 *    Print blank line
        LI   R0,PTNSB
        LI   R1,PTNST-PTNSB
-       BL   @SCRLP
+       BL   @WTSAF
 *    Convert totals
        MOV  @PASSED,R0
        LI   R1,RSLTMG
@@ -96,7 +99,9 @@ RTPCTN C    R14,R3
 *    Print Totals
        LI   R0,RSLTMG
        LI   R1,RSLTED-RSLTMG
-       BL   @SCRLP
+       BL   @WTSAF
+* Close output file.
+       BL   @CLOSEF
 * Enter infinite loop
        LIMI 2
 JMP    JMP  JMP
@@ -148,15 +153,15 @@ PTNS   MOV  R11,*R12+
        MOV  R1,*R12+
        LI   R0,PTNSB
        LI   R1,PTNST-PTNSB
-       BL   @SCRLP
+       BL   @WTSAF
        LI   R0,PTNST
        LI   R1,PTNST2-PTNST
-       BL   @SCRLP
+       BL   @WTSAF
        DECT R12
        MOV  *R12,R1
        DECT R12
        MOV  *R12,R0
-       BL   @SCRLP
+       BL   @WTSAF
        DECT R12
        MOV  *R12,R11
        RT
@@ -166,7 +171,7 @@ RST    TEXT 'Success.'
 RST2   EVEN
 RS     LI   R0,RST
        LI   R1,RST2-RST
-       BL   @SCRLP
+       BL   @WTSAF
        RTWP
 
 * Report Failure
@@ -193,11 +198,11 @@ RF
 * Display standard failure message
        MOV  *R10+,R0
        MOV  *R10+,R1
-       BL   @SCRLP
+       BL   @WTSAF
 * Display user-defined failure message
        MOV  R2,R0
        MOV  R3,R1
-       BL   @SCRLP
+       BL   @WTSAF
 * Don't return to the test being run. No
 * need to run extra assertions
 * in the same test.
@@ -252,6 +257,15 @@ CONVB  CI   R4,>0A00
        AI   R4,>3000
        RT
 CNVB2  AI   R4,>3700
+       RT
+
+* Write to screen and to file
+* ---------------------------
+WTSAF  MOV  R11,*R12+
+       BL   @WRITEF
+       BL   @SCRLP
+       DECT R12
+       MOV  *R12,R11
        RT
 
 * Scroll screen upward and place text
@@ -310,6 +324,8 @@ SCROL1 SLA  R0,5
        MOV  R8,R1
        MOV  R9,R2
        BLWP @VMBW
+       MOV  R8,R0
+       MOV  R9,R1
 * return
 SCRLRT DECT R12
        MOV  *R12,R3
@@ -321,5 +337,174 @@ SCRLRT DECT R12
        MOV  *R12,R8
        DECT R12
        MOV  *R12,R11
+       RT
+
+* Open file
+* ---------
+* FILENM: the location of the filename
+* Must write to FILENM and call OPENF
+* before calling WRITEF
+PABBUF EQU  >1000
+PAB    EQU  >F80
+STATUS EQU  >837C
+PNTR   EQU  >8356
+* Byte 0 = Open
+* Byte 1 = Status/Display/Variable
+* Byte 4 = max record length 80
+* Byte 5 = actual length to write
+* Byte 6-7 are not relevant
+* Byte 8 = status of file
+* Byte 9 = file name length
+PDATA  DATA >0012,PABBUF,>5000,>0000,>000F
+FILENM TEXT 'DSK2.TESTRESULT'
+       EVEN
+RCDL   EQU  PDATA+5
+WRITE  BYTE >03
+CLOSE  BYTE >01
+OPENF  MOV  R0,*R12+
+       MOV  R1,*R12+
+       MOV  R2,*R12+
+       MOV  R11,*R12+
+* Copy PAB into VDP RAM
+       LI   R0,PAB
+       LI   R1,PDATA
+       LI   R2,25
+       BLWP @VMBW
+* Open file
+       LI   R6,PAB+9
+       MOV  R6,@PNTR
+       BLWP @DSRLNK
+       DATA 8
+       
+       BL   @ERRORF
+       
+       DECT R12
+       MOV  *R12,R11
+       DECT R12
+       MOV  *R12,R2
+       DECT R12
+       MOV  *R12,R1
+       DECT R12
+       MOV  *R12,R0
+       RT
+
+* Write one line of text to file or
+* printer.
+* ----------------------
+* R0: Address of text.
+* R1: Length of text.
+WRTMSG TEXT 'Writing stuff to disk.'
+WRTM0  EVEN
+WRITEF
+       MOV  R0,*R12+
+       MOV  R1,*R12+
+       MOV  R2,*R12+
+       MOV  R6,*R12+
+       MOV  R11,*R12+
+* Write line to VDP RAM
+       MOV  R1,R2
+       MOV  R0,R1
+       LI   R0,PABBUF
+       BLWP @VMBW
+* Update record length
+       SWPB R2
+       MOVB R2,@RCDL
+*
+*      LI   R0,WRTMSG
+*      LI   R1,WRTM0-WRTMSG
+*      BL   @SCRLP
+* Change I/O op-code to write.
+       LI   R0,PAB
+       MOVB @WRITE,R1
+       BLWP @VSBW
+* Do write operation
+       LI   R6,PAB+9
+       MOV  R6,@PNTR
+       BLWP @DSRLNK
+       DATA 8
+*
+       BL   @ERRORF
+       
+       DECT R12
+       MOV  *R12,R11
+       DECT R12
+       MOV  *R12,R6
+       DECT R12
+       MOV  *R12,R2
+       DECT R12
+       MOV  *R12,R1
+       DECT R12
+       MOV  *R12,R0
+       RT
+
+* Close file
+* ----------
+CLOSEF
+       MOV  R0,*R12+
+       MOV  R1,*R12+
+       MOV  R11,*R12+
+* Change I/O op-code to close
+       LI   R0,PAB
+       MOVB @CLOSE,R1
+       BLWP @VSBW
+* Close file
+       LI   R6,PAB+9
+       MOV  R6,@PNTR
+       BLWP @DSRLNK
+       DATA 8
+*
+       BL   @ERRORF
+       
+       DECT R12
+       MOV  *R12,R11
+       DECT R12
+       MOV  *R12,R1
+       DECT R12
+       MOV  *R12,R0
+       RT
+       
+* Report Error
+* ------------
+ERRGEN TEXT 'Some error occurred.'
+ERRMSG TEXT 'File Error Code '
+ERRCD  BSS  >1
+ERR0
+ZEROCR BYTE '0'
+       EVEN
+ERRORF
+       MOV  R0,*R12+
+       MOV  R1,*R12+
+       MOV  R11,*R12+
+       MOV  R0,R0
+       JNE  ERR2
+       LI   R0,ERRGEN
+       LI   R1,ERRMSG-ERRGEN
+       BL   @SCRLP
+* Read Error Code
+ERR2   MOVB @PDATA+1,R0
+       SRL  R0,5
+       AI   R0,>3000
+       MOVB R0,@ERRCD
+* If error code is not '0' or
+* bit 2 of status byte is on,
+* report the error.
+       CB   R0,@ZEROCR
+       JNE  ERR1
+       MOVB @STATUS,R0
+       ANDI R0,>2000
+       JNE  ERR1
+       JMP  ERRRT
+* Display Error Message
+ERR1   LI   R0,ERRMSG
+       LI   R1,ERR0-ERRMSG
+       BL   @SCRLP
+* Return       
+ERRRT
+       DECT R12
+       MOV  *R12,R11
+       DECT R12
+       MOV  *R12,R1
+       DECT R12
+       MOV  *R12,R0
        RT
        END
