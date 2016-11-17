@@ -408,15 +408,14 @@ WRITEF
        BLWP @VMBW
 * Update record length
        SWPB R2
-       MOVB R2,@RCDL
-*
-*      LI   R0,WRTMSG
-*      LI   R1,WRTM0-WRTMSG
-*      BL   @SCRLP
+       MOVB R2,@PDATA+5
 * Change I/O op-code to write.
+       MOVB @WRITE,@PDATA
+* Rewrite data
        LI   R0,PAB
-       MOVB @WRITE,R1
-       BLWP @VSBW
+       LI   R1,PDATA
+       LI   R2,25
+       BLWP @VMBW
 * Do write operation
        LI   R6,PAB+9
        MOV  R6,@PNTR
