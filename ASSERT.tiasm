@@ -54,17 +54,35 @@ ANEQS  BL   @RS
 * Assert that the actual result is
 * unsigned greater than the expected 
 * value.
-ALH
+AH     DATA WORKSP,AHP
+AHM    TEXT 'Expected '
+AHM1   BSS  >4
+       TEXT ' to be (unsigned) greater than '
+AHM2   BSS  >4
+       TEXT ', but this was not the case.'
+AHME   EVEN
+AHP
+* Copy Parameters
+       BL   @COPYP
+* Output Test Name
+       C    R0,R1
+       JH   AHS
+* Report failure
+       BL   @RF
+       DATA AHM1,AHM2
+       DATA AHM,AHME-AHM
+* Report success
+AHS    BL   @RS
 
 * Assert Word Logical High Or Equal
 * ----------------------------------
 * Assert that the actual result is
 * unsigned greater than or equal to the
 * expected value.
-ALHE
+AHE
 
-ALL
-ALLE
+AL
+ALE
 
 AGT
 AGTE
@@ -79,10 +97,10 @@ ALTE
 
 ABEQ
 ABNEQ
-ABLH
-ABLHE
-ABLL
-ABLLE
+ABH
+ABHE
+ABL
+ABLE
 ABGT
 ABGTE
 ABLT
@@ -92,8 +110,7 @@ ABLTE
 ABFEQ
 * Assert Buffers Not Equal
 ABFNEQ
-* Assert Buffer Starts With
-ABFSW
-* Assert Buffer Ends With
-ABFEW
+* Assert Buffer Contains
 ABFC
+* Assert Buffer Does not Contain
+ABFNC

@@ -1,5 +1,6 @@
        DEF  TSTCNT,TSTDAT
-       REF  AEQ,ANEQ,VMBW,PRINTL,MAKETX
+       REF  AEQ,ANEQ,AH
+       REF  VMBW,PRINTL,MAKETX
 
 NAME1  TEXT 'EqTest_FirstBadResult'
 NAME2  TEXT 'EqTest_GoodResult'
@@ -7,6 +8,11 @@ NAME3  TEXT 'EqTest_TwoAsserts_FirstFails'
 NAME4  TEXT 'NotEqTest_GoodResult'
 NAME5  TEXT 'NotEqTest_BadResult'
 NAME6  TEXT 'NotEqTest_TwoSuccessfulAsserts'
+NAME7  TEXT 'LogicalHighTest_GoodResult'
+NAME8  TEXT 'LogicalHighTest_BadResult_Bit0Reset'
+NAME9  TEXT 'LogicalHighTest_BadResult_Bit0Mixed'
+NAME10 TEXT 'LogicalHighTest_BadResult_Bit0Set'
+NAME11 TEXT 'LogicalHighTest_BadResult_BothEqual'
 NAME0
 
 MSG1   TEXT 'This failure message should be visible.'
@@ -25,15 +31,34 @@ MSG6   TEXT 'You won'
        BYTE >27
        TEXT 't see this.  The assert will pass.'
 MSG6A  TEXT 'Same for this message.'
+MSG7   TEXT 'This Logical High test should pass. '
+       TEXT 'Neither number has bit 0 set.'
+MSG7A  TEXT 'This Logical High test should pass. '
+       TEXT 'Only one number has bit 0 set.'
+MSG7B  TEXT 'This Logical High test should pass. '
+       TEXT 'Both numbers have bit 0 set.'
+MSG8   TEXT 'This logical high test should fail. '
+       TEXT 'Neither number has bit 0 set.'
+MSG9   TEXT 'This logical high test should fail. '
+       TEXT 'Only one number has bit 0 set.'
+MSG10  TEXT 'This logical high test should fail. '
+       TEXT 'Both numbers have bit 0 set.'
+MSG11  TEXT 'This Logical High test should fail. '
+       TEXT 'The numbers are equal.'
 MSG0   EVEN
 
-TSTCNT DATA 6
+TSTCNT DATA 11
 TSTDAT DATA NAME1,NAME2-NAME1,TEST1
        DATA NAME2,NAME3-NAME2,TEST2
        DATA NAME3,NAME4-NAME3,TEST3
        DATA NAME4,NAME5-NAME4,TEST4
        DATA NAME5,NAME6-NAME5,TEST5
-       DATA NAME6,NAME0-NAME6,TEST6
+       DATA NAME6,NAME7-NAME6,TEST6
+       DATA NAME7,NAME8-NAME7,TEST7
+       DATA NAME8,NAME9-NAME8,TEST8
+       DATA NAME9,NAME10-NAME9,TEST9
+       DATA NAME10,NAME11-NAME10,TEST10
+       DATA NAME11,NAME0-NAME11,TEST11
 
 TEST1  LI   R0,4
        LI   R1,8
@@ -87,4 +112,49 @@ TEST6  LI   R0,>FFFE
        BLWP @ANEQ
        RTWP
 
+TEST7  LI   R0,>6204
+       LI   R1,>4107
+       LI   R2,MSG7
+       LI   R3,MSG7A-MSG7
+       BLWP @AH
+       LI   R0,>9729
+       LI   R1,>6800
+       LI   R2,MSG7A
+       LI   R3,MSG7B-MSG7A
+       BLWP @AH
+       LI   R0,>A482
+       LI   R1,>8491
+       LI   R2,MSG7B
+       LI   R3,MSG8-MSG7B
+       BLWP @AH       
+       RTWP
+
+TEST8  LI   R0,>3009
+       LI   R1,>6472
+       LI   R2,MSG8
+       LI   R3,MSG9-MSG8
+       BLWP @AH
+       RTWP
+
+TEST9  LI   R0,>0004
+       LI   R1,>FFFE
+       LI   R2,MSG9
+       LI   R3,MSG10-MSG9
+       BLWP @AH
+       RTWP
+
+TEST10 LI   R0,>FFE0
+       LI   R1,>FFFF
+       LI   R2,MSG10
+       LI   R3,MSG11-MSG10
+       BLWP @AH
+       RTWP       
+
+TEST11 LI   R0,>0148
+       LI   R1,>0148
+       LI   R2,MSG11
+       LI   R3,MSG0-MSG11
+       BLWP @AH
+       RTWP
+       
        END
