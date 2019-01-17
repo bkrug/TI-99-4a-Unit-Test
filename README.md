@@ -1,4 +1,4 @@
 # TI-99-4a-Unit-Test
 A unit testing framework for Assembly Language on the TI-99/4a
 
-Have you ever wanted to introduce Test Driven Development to programs that you developed in the TI-99/4a's Editor/Assembler program?  You havn't?  Well, give this library will allow you to give it a try anyway.
+The TI-99/4a contained the TMS9900 as its CPU. I have interest in writing assembly code as a hobby. Even assembly programs can be broken down into small enough units that the units can be auto tested, and I hope to eventually use this library in order to run such test.
